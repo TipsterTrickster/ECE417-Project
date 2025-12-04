@@ -1,0 +1,7 @@
+<launch>
+  <node name="any_name_you_like" pkg="aruco_opencv" exec="aruco_tracker_autostart" output="screen">
+    <param name="cam_base_topic" value="camera/image_raw"/>
+    <param name="marker_size" value="0.05"/>
+    <param name="marker_dict" value="4X4_50"/>
+  </node>
+</launch>
