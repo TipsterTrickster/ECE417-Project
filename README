@@ -1,0 +1,27 @@
+Startin up:
+
+docker container start -ia ros-humble
+source setup.bash
+
+// If files are modified:
+cd ws // Make sure you are in the ws directory
+colcon build --symlink-install
+
+// Run background nodes
+ros2 launch py_pubsub aruco_astar_motors.launch.xml
+
+Ctrl + p then q
+
+docker container exec -it ros-humble bash
+
+ros2 run py_pubsub <node_name>
+
+// Finishing up and closing out
+Ctrl+d
+
+docker container attach ros-humble
+Ctrl+c // Exit background nodes
+
+Ctrl+d // Exit docker container
+
+docker container stop ros-humble
