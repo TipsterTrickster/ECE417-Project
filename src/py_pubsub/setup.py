@@ -38,6 +38,7 @@ setup(
          	'talker = py_pubsub.publisher_member_function:main',
          	'listener = py_pubsub.subscriber_member_function:main',
 		'move2aruco = py_pubsub.move2aruco:main',
+		# 'getpos = py_pubsub.getpos:main',
         ],
     },
 )
