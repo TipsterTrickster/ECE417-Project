@@ -1,3 +1,4 @@
+# ROS2 python Library to intract with nodes, topics, publishers, subscribers, and actions
 import rclpy
 from rclpy.node import Node
 # Detection msg format from ARUCO markers
@@ -16,34 +17,35 @@ MINDIST = 0.10
 OMAXANGLE = 25 * math.pi/180.
 OMAX = 1.00
 
-
 # what is minimum angle to the ARUCO marker at which
 # the jetbot should have OMIN
 OMINANGLE = 5 * math.pi/180.
 # if angular velocity is smaller than this, then motors are unable to move the jetbot
 OMIN = 0.50
 
-
 def get_2d_rot_matrix(quat):
     """
     Get 2d rotation matrix (ignore y axis, tilt) from quaternion 
     """
+
+    # Initialiation of quarternion variables
     w, x, y, z = quat
 
     # Convert quaternion to 3x3 rotation matrix
     rotation_matrix = np.array([
-        [1 - 2*y*y - 2*z*z, 2*x*y - 2*z*w, 2*x*z + 2*y*w],
-        [2*x*y + 2*z*w, 1 - 2*x*x - 2*z*z, 2*y*z - 2*x*w],
-        [2*x*z - 2*y*w, 2*y*z + 2*x*w, 1 - 2*x*x - 2*y*y]
+        [1 - 2*(y**2 + z**2), 2*(x*y - z*w), 2*(x*z + y*w)],
+        [2*(x*y + z*w), 1 - 2*(x**2 + z**2), 2*(y*z - x*w)],
+        [2*(x*z - y*w), 2*(y*z + x*w), 1 - 2*(x**2 + y**2)]
     ])
 
     # Get 2x2 matrix without Y axis
     return np.array([[rotation_matrix[0,0], rotation_matrix[0, 2]], [rotation_matrix[2,0], rotation_matrix[2, 2]]])
 
-
 class GetPos(Node):
     def __init__(self):
         super().__init__('move2aruco')
+
+        # Create a subscriber
         self.sub = self.create_subscription(ArucoDetection,
         '/aruco_detections',
         self.on_aruco_detection, 10)
@@ -68,6 +70,7 @@ class GetPos(Node):
         transformations = {}
 
         for marker in msg.markers:
+            # Displays message along with a time stamp
             self.get_logger().info('marker: "%s"' % marker.marker_id)
 
             # Get rotation and translation matrices
@@ -96,25 +99,24 @@ class GetPos(Node):
             # self.get_logger().info('Z pose: "%s"' % marker.pose.position.z)
             # self.get_logger().info('X pose: "%s"' % marker.pose.position.x)
 
-
-
-
         self.get_logger().info('DONE')
 
-
-
-
 def main(args=None):
+    # Initializes library
     rclpy.init(args=args)
 
+    # Get the posistion
     getpos = GetPos()
 
+    # Program continues until node is closed / shut down
     rclpy.spin(getpos)
 
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)
     getpos.destroy_node()
+
+    # Shutdown the node
     rclpy.shutdown()
 if __name__ == '__main__':
     main()
