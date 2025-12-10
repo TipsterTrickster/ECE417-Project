@@ -42,16 +42,7 @@ def get_3d_rot_matrix(quat):
     # return np.array([[rotation_matrix[0,0], rotation_matrix[0, 2]], [rotation_matrix[2,0], rotation_matrix[2, 2]]])
     return rotation_matrix
 
-# def get_inverted_transformation_matrix(R_matrix, t_matrix):
 
-#     RT_matrix = np.transpose(R_matrix)
-
-#     transformation = np.vstack([
-#         np.hstack([RT_matrix, (-1 * RT_matrix) @ t_matrix.reshape(2, 1)]),
-#         np.array([0, 0, 1])
-#     ])
-
-#     return transformation
 def get_inverted_transformation_matrix(T, D=3):
     Tinv = np.eye(D+1)
     Tinv[:D, :D] = T[:D, :D].T
@@ -114,9 +105,10 @@ class GetPos(Node):
                 if marker.id == 0:
                     self.home_marker = 0
             
+            # Add transformation to dictionary
             transformations[marker.marker_id] = transformation
 
-            # inverse_transformation = get_inverted_transformation_matrix(rotation, translation)
+            # Add inverse matrix to dictionary
             inverse_transformation = get_inverted_transformation_matrix(transformation)
             inverse_transformations[marker.marker_id] = inverse_transformation
 
@@ -127,6 +119,7 @@ class GetPos(Node):
                 if ti_id == t_id:
                     continue
 
+                # Add relative transformation of the ArUco markers to dictionary
                 relative_transformation = inverse_transformations[ti_id] @ transformations[t_id]
                 self.aruco_transformation_matrices[f"{str(ti_id)}{str(t_id)}"] = relative_transformation
 
@@ -140,7 +133,8 @@ class GetPos(Node):
         
         # Chain aruco marker transformations to get their positions relative to the home marker
         for t_id in transformations.keys():
-
+            
+            # Ignore home marker as it doesn't have a transformation to home
             if t_id == 0:
                 continue
             
@@ -149,26 +143,25 @@ class GetPos(Node):
 
                 for a_id in self.aruco_transformation_matrices.keys():
 
-                    # If the transformation 
+                    # Get the tranformation of the current marker to another marker that has a home transformation
                     if t_id == int(a_id[0]):
                         if int(a_id[1]) in self.aruco_home_transformation_matrices.keys():
-
+                            
+                            # Chain together with a marker that has a home transformation to get this markers home transformation
                             self.aruco_home_transformation_matrices[t_id] = self.aruco_transformation_matrices[a_id] @ self.aruco_home_transformation_matrices[t_id]
 
-        # print("HOME TRANFORMATION MATRICES")
-
-        # for key in self.aruco_home_transformation_matrices.keys():
-        #     print(f"ArucoID: {key}")
-        #     print(self.aruco_home_transformation_matrices[key])
 
         print("HOME RELATIVE LOCATION")
 
         # Get the robots position relative to home
         for t_id in transformations.keys():
+
+            # If home is visible print direct transformation
             if t_id == 0:
                 print(transformations[t_id])
                 break
-
+            
+            # IF home is not visible multiply a visible marker's transformation with the home tranformation of that marker
             print(transformations[t_id] @ self.aruco_home_transformation_matrices[t_id])
             break
                 
